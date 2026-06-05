@@ -37,6 +37,8 @@
     </dependencies>
 
     <build>
+        <sourceDirectory>selenium-tasks/src/main/java</sourceDirectory>
+        <testSourceDirectory>selenium-tasks/src/test/java</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

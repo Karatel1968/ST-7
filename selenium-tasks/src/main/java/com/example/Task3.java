@@ -4,14 +4,17 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
 public class Task3 {
-    public static void execute(WebDriver driver) {
+    public static void execute(WebDriver driver, WebDriverWait wait) {
         String url = "https://api.open-meteo.com/v1/forecast" +
                 "?latitude=56&longitude=44" +
                 "&hourly=temperature_2m,rain" +
@@ -21,8 +24,13 @@ public class Task3 {
 
         try {
             driver.get(url);
-            WebElement pre = driver.findElement(By.tagName("pre"));
-            String jsonText = pre.getText();
+            String jsonText;
+            try {
+                WebElement pre = driver.findElement(By.tagName("pre"));
+                jsonText = pre.getText();
+            } catch (NoSuchElementException e) {
+                jsonText = driver.findElement(By.tagName("body")).getText();
+            }
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(jsonText);
 
@@ -32,9 +40,11 @@ public class Task3 {
             JSONArray rains = (JSONArray) hourly.get("rain");
 
             StringBuilder table = new StringBuilder();
-            String header = String.format("%-4s %-20s %-15s %-10s%n", "№", "Дата/время", "Температура (°C)", "Осадки (мм)");
+            String header = String.format("%-4s %-20s %-15s %-10s%n", "№", "Дата/время", "Температура", "Осадки (мм)");
             table.append(header);
+            table.append("-------------------------------------------------------------\n");
             System.out.print(header);
+            System.out.print("-------------------------------------------------------------\n");
 
             for (int i = 0; i < times.size(); i++) {
                 String line = String.format("%-4d %-20s %-15s %-10s%n",
@@ -46,7 +56,11 @@ public class Task3 {
                 System.out.print(line);
             }
 
-            try (PrintWriter out = new PrintWriter(new FileWriter("result/forecast.txt"))) {
+            File resultDir = new File("result");
+            if (!resultDir.exists()) {
+                resultDir.mkdirs();
+            }
+            try (PrintWriter out = new PrintWriter(new FileWriter(new File(resultDir, "forecast.txt")))) {
                 out.print(table.toString());
                 System.out.println("Прогноз сохранён в result/forecast.txt");
             }
